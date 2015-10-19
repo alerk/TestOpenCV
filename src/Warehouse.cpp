@@ -15,8 +15,8 @@ Warehouse::Warehouse() {
 	// TODO Auto-generated constructor stub
 	readPos = writePos = total = 0;
 	isLockedRead = isLockedWrite = false;
-	bufferEmptyCond = bufferFullCond = PTHREAD_COND_INITIALIZER;
-	bufferInMutex = bufferOutMutex = PTHREAD_MUTEX_INITIALIZER;
+	//bufferEmptyCond = bufferFullCond = PTHREAD_COND_INITIALIZER;
+	//bufferInMutex = bufferOutMutex = PTHREAD_MUTEX_INITIALIZER;
 }
 
 Warehouse::~Warehouse() {

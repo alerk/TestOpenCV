@@ -5,25 +5,114 @@
  *      Author: quyen
  */
 #include <stdio.h>
-#include <queue>
+#include <vector>
 #include <stdarg.h>
 #include "FireDetector.h"
 
 namespace TestAlgorithm {
 static int fireThreshold = 10;
 
-const int unsigned GAP = 10;
-const int unsigned SIZE_1 = 360;
-const int unsigned SIZE_2 = 320;
-const int unsigned SIZE_3 = 280;
+const unsigned int  GAP = 10;
+const unsigned int  SIZE_1 = 360;
+const unsigned int  SIZE_2 = 320;
+const unsigned int  SIZE_3 = 280;
+const unsigned int DELAY_TIME_MS = 30;
 
 FireDetector::FireDetector() {
 	// TODO Auto-generated constructor stub
+	sourceName = "Test";
+	isFire = false;
 
 }
 
 FireDetector::~FireDetector() {
 	// TODO Auto-generated destructor stub
+}
+
+void FireDetector::init()
+{
+	capture = cv::VideoCapture("/home/quyen/work/eclipse/workspace/FireServer/Resources/OP_8mkM3L34.mp4");
+	if(!capture.isOpened())
+	{
+		std::cout << "Cannot open video source!" << std::endl;
+	}
+	std::cout << "[FireDetector]Init" << std::endl;
+	namedWindow("Test");
+}
+
+void FireDetector::start()
+{
+#if DUAL_THREAD
+	if( pthread_create(&captureThread,NULL,FireDetector::captureFrame,(void*)this)!=0) //using myCode
+	{
+		std::cout << "Fail to create captureThread" << std::endl;
+	}
+#endif
+
+	if( pthread_create(&runThread,NULL,FireDetector::run,(void*)this)!=0) //using myCode
+	{
+		std::cout << "Fail to create fireThread" << std::endl;
+	}
+	std::cout << "[FireDetector]Start" << std::endl;
+//	display->startDisplayThread();
+}
+
+void FireDetector::join()
+{
+	pthread_join(runThread, NULL);
+#if DUAL_THREAD
+	pthread_join(captureThread, NULL);
+#endif
+}
+
+int FireDetector::getFireThreshold() const
+{
+	return 20;
+}
+
+void* FireDetector::run(void* arg)
+{
+	FireDetector* obj = (FireDetector*)arg;
+	cv::Mat aFrame, tempFrame, sendFrame;
+	Mat back;
+	Mat front;
+	BackgroundSubtractorMOG2 bg;
+	unsigned int frameCount = 0;
+
+	while(true)
+	{
+		if(!obj->capture.read(tempFrame))
+		{
+			std::cout << "[Run Loop]Cannot read frame" << std::endl;
+			obj->capture.set(CV_CAP_PROP_POS_AVI_RATIO, 0);
+			continue;
+		}
+
+		imshow("Test", tempFrame);
+
+//		cv::resize(tempFrame, aFrame, cv::Size(640,480), 0, 0, cv::INTER_CUBIC);
+
+//		cv::resize(tempFrame, sendFrame, cv::Size(320,240), 0, 0, cv::INTER_CUBIC);
+
+//		int start_s=clock();
+//		int firePixel = obj->getFirePixelNumber(aFrame);
+//
+//		if(firePixel>obj->getFireThreshold())
+//		{
+//			frameCount++;
+//			if(frameCount>30)
+//			{
+//				obj->isFire = true;
+//				frameCount = 0;
+//			}
+//		}
+//		int stop_s=clock();
+//		std::cout << "time(ms): " << (stop_s-start_s)/double(CLOCKS_PER_SEC)*1000 << std::endl;
+//		imshow(wName, aFrame);
+
+		usleep(DELAY_TIME_MS*1000);
+	}
+	return NULL;
 }
 
 int FireDetector::getFirePixelNumber(Mat aFrame) {
@@ -48,16 +137,16 @@ int FireDetector::getFirePixelNumber(Mat aFrame) {
 	//cv::dilate(front, front, cv::Mat());
 	cv::medianBlur(front, front, 5);
 	cv::findContours(front,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
-	vector<vector<Point> > contours_poly( contours.size() );
+	std::vector<std::vector<cv::Point> > contours_poly( contours.size() );
 	vector<Rect> boundRect( contours.size() );
 	vector<Point2f>center( contours.size() );
 	vector<float>radius( contours.size() );
 
 	for(unsigned int i = 0; i < contours.size(); i++ )
 	{
-		approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+		//approxPolyDP( contours[i], contours_poly[i], 3.0, true );
 		boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-		minEnclosingCircle( (Mat)contours_poly[i], center[i], radius[i] );
+		//minEnclosingCircle( contours_poly[i], center[i], radius[i] );
 	}
 
 	for(unsigned int i = 0; i< contours.size(); i++ )
@@ -107,8 +196,8 @@ int FireDetector::getFirePixelNumber(Mat aFrame) {
 	cvtColor(colorMask, colorMask, CV_GRAY2BGR);
 
 	char wName[25];
-//	sprintf(&(wName[0]),"Frames_%s", sourceName.c_str());
-//	cvShowManyImages(wName, frame.cols, frame.rows, 5, (unsigned char*)frame.data, (unsigned char*)front.data, (unsigned char*)Y_Cb.data, (unsigned char*)Cr_Cb.data, (unsigned char*)colorMask.data);
+	sprintf(&(wName[0]),"Frames_%s", sourceName.c_str());
+	cvShowManyImages(wName, frame.cols, frame.rows, 5, (unsigned char*)frame.data, (unsigned char*)front.data, (unsigned char*)Y_Cb.data, (unsigned char*)Cr_Cb.data, (unsigned char*)colorMask.data);
 //	imshow(wName, frame);
 	if(fireCount>fireThreshold)
 	{
@@ -119,7 +208,6 @@ int FireDetector::getFirePixelNumber(Mat aFrame) {
 	{
 		isFire = false;
 	}
-
 	return fireCount;
 }
 

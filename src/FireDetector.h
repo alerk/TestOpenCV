@@ -30,6 +30,7 @@ public:
 	virtual ~FireDetector();
 
 	int getFirePixelNumber(Mat aFrame);
+	int getFireThreshold() const ;
 
 	VideoCapture capture;
 	Mat frame;
@@ -39,6 +40,17 @@ public:
 	void cvShowManyImages(std::string title, int s_cols, int s_rows, int nArgs, ...);
 
 	bool isFire;
+
+	pthread_t 		runThread;
+		pthread_mutex_t runMutex;
+		pthread_cond_t 	runCond;
+
+		int imgWidth, imgHeight;
+		static void* run(void* arg);
+		void init();
+			void start();
+			void join();
+			std::string sourceName;
 };
 
 } /* namespace TestAlgorithm */
