@@ -90,8 +90,8 @@ int main() {
 }
 
 int getFirePixelNumber(Mat aFrame) {
-    const int ROI_WIDTH = 40;
-    const int ROI_HEIGHT = 30;
+    const int ROI_WIDTH = 20;
+    const int ROI_HEIGHT = 15;
     unsigned int currentWidth = 0, currentHeight = 0;
     unsigned int width, height;
     std::vector<std::vector<cv::Point> > contours;
