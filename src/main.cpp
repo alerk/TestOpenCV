@@ -62,7 +62,7 @@ int main() {
     cv::Mat frame;
 
 //    cv::VideoCapture capture = cv::VideoCapture("/home/quyen/work/eclipse/workspace/FireServer/Resources/OP_8mkM3L34.mp4");
-    cv::VideoCapture capture = cv::VideoCapture("/home/quyen/work/eclipse/workspace/FireServer/Resources/usnMR6I_EAQ.mp4");
+    cv::VideoCapture capture = cv::VideoCapture("/home/quyen/Work/Video_files/video.avi");
     if(!capture.isOpened())
     {
         std::cout << "Cannot open video source!" << std::endl;
